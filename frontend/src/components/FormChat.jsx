@@ -1,12 +1,36 @@
 import React from "react";
+import ChatMessage from "./ChatMessage";
 
-const FormChat = ({ username, socket, count, listMessage, ...props }) => {
+const FormChat = ({ username, socket, count, listMessage }) => {
   const nodeRef = React.useRef(null);
   const messageRef = React.useRef(null);
+
+  const handleSendMessage = () => {
+    if (messageRef.current.value !== "") {
+      socket.current.emit("sendMessageFromClient", {
+        username,
+        message: messageRef.current.value,
+      });
+      messageRef.current.value = "";
+    }
+  };
 
   React.useEffect(() => {
     document.onreadystatechange = () => {
       nodeRef.current.style.maxHeight = `${nodeRef.current.clientHeight}px`;
+      messageRef.current.focus();
+    };
+
+    const onEnterPress = (e) => {
+      if (e.code === "Enter") {
+        handleSendMessage();
+      }
+    };
+
+    window.addEventListener("keypress", onEnterPress);
+
+    return () => {
+      window.removeEventListener("keypress", onEnterPress);
     };
   }, []);
 
@@ -49,47 +73,12 @@ const FormChat = ({ username, socket, count, listMessage, ...props }) => {
             ref={messageRef}
           />
           <button
-            className="p-4 bg-blue-500 rounded-lg text-white font-semibold shadow-md"
-            onClick={(e) => {
-              if (messageRef.current.value !== "") {
-                socket.current.emit("sendMessageFromClient", {
-                  username,
-                  message: messageRef.current.value,
-                });
-                messageRef.current.value = "";
-              }
-            }}
+            className="pl-6 pr-6 pt-4 pb-4 bg-blue-500 rounded-lg text-white font-semibold shadow-md active:scale-90 transition-all"
+            onClick={handleSendMessage}
           >
             Gửi
           </button>
         </div>
-      </div>
-    </div>
-  );
-};
-
-const ChatMessage = ({ text, isCurrentUser, username, ...props }) => {
-  return (
-    <div
-      className={`w-full mt-3 mb-3 flex ${
-        isCurrentUser ? "justify-end pr-3" : "justify-start pl-3"
-      }`}
-    >
-      <div
-        className={`p-4 ${
-          isCurrentUser ? "bg-blue-500" : "bg-gray-300"
-        } rounded-lg`}
-      >
-        <p
-          className={`${
-            isCurrentUser ? "text-white" : "text-black"
-          } font-semibold`}
-        >
-          {!isCurrentUser && (
-            <span className="text-violet-500">{`${username}: `}</span>
-          )}
-          {text}
-        </p>
       </div>
     </div>
   );
