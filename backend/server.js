@@ -19,11 +19,15 @@ app.get("/", (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  console.log(`Socket user ID: ${socket.id} connect`);
-  count++;
+  socket.emit("getId", socket.id);
+  io.emit("newUserJoin", { userCount: ++count });
+
   socket.on("disconnect", () => {
-    console.log(`Socket user ID: ${socket.id} disconnect`);
-    count--;
+    io.emit("userOut", { userCount: --count });
+  });
+
+  socket.on("sendMessageFromClient", (data) => {
+    io.emit("sendMessageFromServer", { data });
   });
 });
 

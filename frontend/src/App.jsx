@@ -1,16 +1,47 @@
 import React from "react";
 import { io } from "socket.io-client";
+import Header from "./components/Header";
+import FormChat from "./components/FormChat";
 
 const App = () => {
+  const [username, setUsername] = React.useState("");
+  const [count, setCount] = React.useState(0);
+  const [message, setMessage] = React.useState("");
+  const socket = React.useRef();
+
   React.useEffect(() => {
-    const socket = io("http://localhost:3001");
+    socket.current = io("localhost:3001") || undefined;
+
+    socket.current.on("getId", (data) => {
+      setUsername(data);
+    });
+
+    socket.current.on("newUserJoin", (data) => {
+      setCount(data.userCount);
+    });
+
+    socket.current.on("userOut", (data) => {
+      setCount(data.userCount);
+    });
+
+    socket.current.on("sendMessageFromServer", (data) => {
+      setMessage((message) => [...message, data.data]);
+    });
+
+    return () => {
+      socket.current.disconnect();
+    };
   }, []);
 
   return (
-    <div className={"max-w-[800px] mx-auto"}>
-      <div className={"flex flex-col"}>
-        <span>User</span>
-      </div>
+    <div className={"w-full h-[100vh] max-h-[100vh] flex flex-col"}>
+      <Header />
+      <FormChat
+        socket={socket}
+        username={username}
+        count={count}
+        listMessage={message}
+      />
     </div>
   );
 };
